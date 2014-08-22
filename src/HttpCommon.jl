@@ -1,6 +1,7 @@
 module HttpCommon
 
-using Calendar
+using Dates
+import ICU
 
 export STATUS_CODES,
        GET,
@@ -113,20 +114,22 @@ const HttpMethodNameToBitmask = (String => HttpMethodBitmask)[
 
 const HttpMethodBitmaskToName = (HttpMethodBitmask => String)[v => k for (k, v) in HttpMethodNameToBitmask]
 
+nowutc() = Dates.unix2datetime(time())
+
 # Default HTTP headers
 # RFC 1123 datetime formatting constants
-RFC1123_FORMAT_STR = "EEE, dd MMM yyyy HH:mm:ss"
+const RFC1123_FORMAT_STR = "EEE, dd MMM yyyy HH:mm:ss"
+const RFC1123_FORMATTER = ICU.ICUDateFormat(RFC1123_FORMAT_STR, "GMT")
 
 # Get RFC 1123 datetimes
 #
 #     RFC1123_datetime( now() ) => "Wed, 27 Mar 2013 08:26:04 GMT"
 #     RFC1123_datetime()        => "Wed, 27 Mar 2013 08:26:04 GMT"
 #
-RFC1123_datetime(t::CalendarTime) = begin
-    t = tz(t,"GMT")
-    format(RFC1123_FORMAT_STR, t) * " GMT"
+RFC1123_datetime(t::DateTime) = begin
+    utf8(ICU.format(RFC1123_FORMATTER, float64(t) - Dates.UNIXEPOCH)) * " GMT"
 end
-RFC1123_datetime() = RFC1123_datetime(now())
+RFC1123_datetime() = RFC1123_datetime(nowutc())
 
 # HTTP Headers
 #
