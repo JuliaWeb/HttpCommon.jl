@@ -19,7 +19,7 @@ This package provides types and helper functions for dealing with the HTTP proto
 ## Documentation
 ### Request
 
-A `Request` represents an HTTP request sent by a client to a server. 
+A `Request` represents an HTTP request sent by a client to a server.
 
     :::julia
     type Request
@@ -31,7 +31,7 @@ A `Request` represents an HTTP request sent by a client to a server.
 
 * `method` is an HTTP methods string ("GET", "PUT", etc)
 * `resource` is the url resource requested ("/hello/world")
-* `headers` is a `Dict` of field name `String`s to value `String`s
+* `headers` is an `Associative` of field name `String`s to value `String`s
 * `data` is the data in the request
 
 ### Response
@@ -47,7 +47,7 @@ A `Response` represents an HTTP response sent to a client by a server.
     end
 
 * `status` is the HTTP status code (see `STATUS_CODES`) [default: `200`]
-* `headers` is the `Dict` of headers [default: `headers()`, see Headers below]
+* `headers` is the headers [default: `headers()`, see Headers below]
 * `data` is the response data (as a `String` or `Array{Uint8}`) [default: `""`]
 * `finished` is `true` if the `Reponse` is valid, meaning that it can be converted to an actual HTTP response [default: `false`]
 
@@ -61,7 +61,11 @@ There are a variety of constructors for `Response`, which set sane defaults for 
 
 ### Headers
 
-`Headers` is a type alias for `Dict{String,String}`.
+`Headers` is an `Associative{String,String}`. You can interact with it
+much like a Dict, but it can have multiple keys with the same
+value. For example `Set-Cookie` may be set multiple time for multiple
+cookies.
+
 There is a default constructor, `headers`, to produce a reasonable default set of headers.
 The defaults are as follows:
 

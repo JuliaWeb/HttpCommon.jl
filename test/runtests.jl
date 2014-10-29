@@ -33,8 +33,34 @@ facts("HttpCommon utility functions") do
         @fact parsequerystring("foo=%3Ca%20href%3D%27foo%27%3Ebar%3C%2Fa%3Erun%26%2B%2B&bar=123") =>
             ["foo" => "<a href='foo'>bar</a>run&++", "bar" => "123"]
     end
-
 end
 
 # Check doesn't throw
 RFC1123_datetime()
+
+facts("Headers") do
+    context("Headers with duplicates") do
+        h = Headers()
+        @fact length(h) => 0
+
+        h["Content-Type"] = "text/html"
+        @fact length(h) => 1
+
+        h["Set-Cookie"] = "user=me;"
+        @fact length(h) => 2
+
+        h["Set-Cookie"] = "pass=secret;"
+        @fact length(h) => 3
+
+        @fact h["Content-Type"] => "text/html"
+        @fact headersforkey(h, "Set-Cookie") => ["user=me;", "pass=secret;"]
+        @fact h |> collect |> sort => [("Content-Type", "text/html"),
+                                       ("Set-Cookie", "pass=secret;"),
+                                       ("Set-Cookie", "user=me;")]
+
+        delete!(h, "Set-Cookie")
+        @fact length(h) => 1
+        @fact h["Content-Type"] => "text/html"
+        @fact get(h, "Set-Cookie", "**DEFAULT**") => "**DEFAULT**"
+    end
+end
