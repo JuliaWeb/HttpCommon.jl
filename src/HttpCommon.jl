@@ -27,11 +27,12 @@ export STATUS_CODES,
        decodeURI,
        parsequerystring,
        FileResponse,
-       mimetypes
+       mimetypes,
+       headersforkey
 
 include("mimetypes.jl")
 
-import Base.show
+import Base: done, next, start, get, setindex!, delete!, show, length, convert
 
 const STATUS_CODES = Dict([
     (100, "Continue"),
@@ -129,16 +130,85 @@ RFC1123_datetime() = RFC1123_datetime(Dates.now(Dates.UTC))
 
 # HTTP Headers
 #
-# Dict Type for HTTP headers
+# Type for HTTP headers
 # `headers()` for building default Response Headers
 #
-typealias Headers Dict{String,String}
-headers() = Dict{String,String}([ 
+type Headers <: Associative{String, String}
+    data::Dict{String,Vector{String}}
+    length::Int
+end
+Headers() = Headers(Dict{String,Vector{String}}(), 0)
+Headers{K<:String,V<:String}(d::Associative{K,V}) = merge!(Headers(), d)
+headers() = Headers(Dict{String,String}([
     ("Server"            , "Julia/$VERSION"),
     ("Content-Type"      , "text/html; charset=utf-8"),
     ("Content-Language"  , "en"),
     ("Date"              , RFC1123_datetime())
-])
+]))
+
+convert{K<:String,V<:String}(::Type{Headers}, d::Associative{K,V}) = Headers(d)
+
+function start(h::Headers)
+    vals = (String)[]
+    (start(h.data), nothing, vals, start(vals))
+end
+
+function done(h::Headers, s)
+    dictst, key, vals, valsst = s
+    done(vals, valsst) && done(h.data, dictst)
+end
+
+function next(h::Headers, s)
+    dictst, key, vals, valsst = s
+    while done(vals, valsst)
+        ((key, vals), dictst) = next(h.data, dictst)
+        valsst = start(vals)
+    end
+    val, valsst = next(vals, valsst)
+    ((key, val), (dictst, key, vals, valsst))
+end
+
+function show(io::IO, h::Headers)
+    println(io, "Headers     :")
+    for (k,v) in h
+        println(io, "    $k: $v")
+    end
+end
+
+function get(h::Headers, k::String, default)
+    vs = get(h.data, k, nothing)
+    if is(vs, nothing)
+        return default
+    end
+    @assert length(vs) != 0
+    if length(vs) > 1
+        warn("getindex() called for header \"$k\" with multiple values")
+    end
+    vs[1]
+end
+
+function setindex!(h::Headers, v::String, k::String)
+    h.length += 1
+    if haskey(h.data, k)
+        push!(h.data[k], v)
+    else
+        h.data[k] = [v]
+    end
+    return h
+end
+
+function delete!(h::Headers, k::String)
+    vs = get(h.data, k, nothing)
+    if !is(vs, nothing)
+        h.length -= length(vs)
+    end
+    delete!(h.data, k)
+    h
+end
+
+length(h::Headers) = h.length
+
+headersforkey(h::Headers, k::String) = h.data[k]
 
 # HTTP request
 #
@@ -198,7 +268,7 @@ function FileResponse(filename)
         Response(200, Dict{String,String}([("Content-Type",mime)]), s)
     else
         Response(404, "Not Found - file $filename could not be found")
-    end         
+    end
 end
 
 # Escape HTML characters
