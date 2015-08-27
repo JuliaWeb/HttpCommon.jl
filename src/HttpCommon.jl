@@ -162,7 +162,7 @@ type Request
     headers::Headers
     data::Vector{UInt8}
 end
-Request() = Request("", "", Dict{String,String}(), Vector{UInt8}())
+Request() = @compat Request("", "", Dict{String,String}(), Vector{UInt8}())
 
 # HTTP response
 #
