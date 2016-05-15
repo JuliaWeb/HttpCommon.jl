@@ -2,6 +2,7 @@ __precompile__()
 
 module HttpCommon
 
+using Compat; import Compat.String
 import URIParser: URI, unescape
 
 export Headers, Request, Cookie, Response,
@@ -34,8 +35,8 @@ It has five fields:
 * `data`: the request data as a vector of bytes
 """
 type Request
-    method::UTF8String      # HTTP method string (e.g. "GET")
-    resource::UTF8String    # Resource requested (e.g. "/hello/world")
+    method::String      # HTTP method string (e.g. "GET")
+    resource::String    # Resource requested (e.g. "/hello/world")
     headers::Headers
     data::Vector{UInt8}
     uri::URI
@@ -54,11 +55,11 @@ A `Cookie` represents an HTTP cookie. It has three fields:
 of pairs of strings.
 """
 type Cookie
-    name::UTF8String
-    value::UTF8String
-    attrs::Dict{UTF8String, UTF8String}
+    name::String
+    value::String
+    attrs::Dict{String, String}
 end
-Cookie(name, value) = Cookie(name, value, Dict{UTF8String, UTF8String}())
+Cookie(name, value) = Cookie(name, value, Dict{String, String}())
 Base.show(io::IO, c::Cookie) = print(io, "Cookie(", c.name, ", ", c.value,
                                         ", ", length(c.attrs), " attributes)")
 
@@ -81,7 +82,7 @@ Response has many constructors - use `methods(Response)` for full list.
 type Response
     status::Int
     headers::Headers
-    cookies::Dict{UTF8String, Cookie}
+    cookies::Dict{String, Cookie}
     data::Vector{UInt8}
     request::Nullable{Request}
     history::Vector{Response}
@@ -94,7 +95,7 @@ end
 # `finished` will default to `false`.
 typealias HttpData Union{Vector{UInt8}, AbstractString}
 Response(s::Int, h::Headers, d::HttpData) =
-  Response(s, h, Dict{UTF8String, Cookie}(), d, Nullable(), Response[], false, Request[])
+  Response(s, h, Dict{String, Cookie}(), d, Nullable(), Response[], false, Request[])
 Response(s::Int, h::Headers)              = Response(s, h, UInt8[])
 Response(s::Int, d::HttpData)             = Response(s, headers(), d)
 Response(d::HttpData, h::Headers)         = Response(200, h, d)
@@ -132,7 +133,7 @@ Convert a valid querystring to a Dict:
 
     q = "foo=bar&baz=%3Ca%20href%3D%27http%3A%2F%2Fwww.hackershool.com%27%3Ehello%20world%21%3C%2Fa%3E"
     parsequerystring(q)
-    # Dict{ASCIIString,ASCIIString} with 2 entries:
+    # Dict{String,String} with 2 entries:
     #   "baz" => "<a href='http://www.hackershool.com'>hello world!</a>"
     #   "foo" => "bar"
 """
