@@ -3,11 +3,10 @@ __precompile__()
 module HttpCommon
 
 using Compat
-import Compat: UTF8String
-import URIParser: URI, unescape
+using Compat: UTF8String
+using URIParser: URI, unescape
 
-export Headers, Request, Cookie, Response,
-       escapeHTML, parsequerystring
+export Headers, Request, Cookie, Response, escapeHTML, parsequerystring
 
 
 # All HTTP status codes, as a Dict of code => description
@@ -18,7 +17,7 @@ include("status.jl")
 """
 `Headers` represents the header fields for an HTTP request.
 """
-typealias Headers Dict{AbstractString,AbstractString}
+const Headers = Dict{AbstractString,AbstractString}
 headers() = Headers(
     "Server"            => "Julia/$VERSION",
     "Content-Type"      => "text/html; charset=utf-8",
@@ -94,7 +93,7 @@ type Response
 end
 # If a Response is instantiated with all of fields except for `finished`,
 # `finished` will default to `false`.
-typealias HttpData Union{Vector{UInt8}, AbstractString}
+const HttpData = Union{Vector{UInt8}, AbstractString}
 Response(s::Int, h::Headers, d::HttpData) =
   Response(s, h, Dict{UTF8String, Cookie}(), d, Nullable(), Response[], false, Request[])
 Response(s::Int, h::Headers)              = Response(s, h, UInt8[])
