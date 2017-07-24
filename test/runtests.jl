@@ -1,7 +1,6 @@
 using HttpCommon
 using Base.Test
-using Compat
-import Compat: UTF8String
+
 # headers
 @test isa(HttpCommon.headers(), Headers)
 
@@ -50,7 +49,7 @@ h = HttpCommon.headers()
         Dict("foo" => "<a href='foo'>bar</a>run&++", "bar" => "123")
 
 begin
-  substrings = split(UTF8String("a%20=1&b=%202,b,c"), ",")
+  substrings = split("a%20=1&b=%202,b,c", ",")
   @test parsequerystring(substrings[1]) == Dict("a " => "1", "b" => " 2")
 end
 @test parsequerystring("") == Dict()
