@@ -38,6 +38,7 @@ It has five fields:
 * `resource`: the resource requested (e.g. "/hello/world")
 * `headers`: see `Headers` above
 * `data`: the data in the request as a vector of bytes
+* `uri`: additional details, normally not used
 
 
 #### `Cookie`
