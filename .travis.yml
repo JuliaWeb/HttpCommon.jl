@@ -11,6 +11,7 @@ sudo: false
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
     - julia -e 'Pkg.clone(pwd())'
+    - julia -e 'Pkg.add("URIParser");using URIParser'
     - julia -e 'Pkg.test("HttpCommon", coverage=true)'
 after_success:
     - julia -e 'cd(Pkg.dir("HttpCommon")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
