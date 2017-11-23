@@ -2,8 +2,9 @@ using HttpCommon
 using Base.Test
 
 # headers
+h = HttpCommon.headers()
+@test isa(h, Headers)
 @test isa(HttpCommon.headers(), Headers)
-
 # Request
 @test sprint(show, Request()) == "Request(:/, 0 headers, 0 bytes in body)"
 @test sprint(show, Request("GET", "/get", HttpCommon.headers(), "")) ==
@@ -14,12 +15,18 @@ using Base.Test
         "Cookie(test, it, 0 attributes)"
 
 # Response
-h = HttpCommon.headers()
+h_abstract = Dict{AbstractString, AbstractString}(h)
 @test sprint(show, Response(200, h, "HttpCommon")) ==
+        "Response(200 OK, 4 headers, 10 bytes in body)"
+@test sprint(show, Response(200, h_abstract, "HttpCommon")) ==
         "Response(200 OK, 4 headers, 10 bytes in body)"
 @test sprint(show, Response(200, h, UInt8[1,2,3])) ==
         "Response(200 OK, 4 headers, 3 bytes in body)"
+@test sprint(show, Response(200, h_abstract, UInt8[1,2,3])) ==
+        "Response(200 OK, 4 headers, 3 bytes in body)"
 @test sprint(show, Response(200, h)) ==
+        "Response(200 OK, 4 headers, 0 bytes in body)"
+@test sprint(show, Response(200, h_abstract)) ==
         "Response(200 OK, 4 headers, 0 bytes in body)"
 @test sprint(show, Response(200, "HttpCommon")) ==
         "Response(200 OK, 4 headers, 10 bytes in body)"
@@ -27,7 +34,11 @@ h = HttpCommon.headers()
         "Response(200 OK, 4 headers, 3 bytes in body)"
 @test sprint(show, Response("HttpCommon", h)) ==
         "Response(200 OK, 4 headers, 10 bytes in body)"
+@test sprint(show, Response("HttpCommon", h_abstract)) ==
+        "Response(200 OK, 4 headers, 10 bytes in body)"
 @test sprint(show, Response(UInt8[1,2,3], h)) ==
+        "Response(200 OK, 4 headers, 3 bytes in body)"
+@test sprint(show, Response(UInt8[1,2,3], h_abstract)) ==
         "Response(200 OK, 4 headers, 3 bytes in body)"
 @test sprint(show, Response("HttpCommon")) ==
         "Response(200 OK, 4 headers, 10 bytes in body)"
