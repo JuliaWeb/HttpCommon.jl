@@ -1,7 +1,7 @@
 __precompile__()
  
 module HttpCommon
-
+using Base.Dates
 using URIParser: URI, unescape
 
 export Headers, Request, Cookie, Response, escapeHTML, parsequerystring
@@ -30,6 +30,7 @@ It has five fields:
 * `resource`: the resource requested (e.g. "/hello/world")
 * `headers`: see `Headers` above
 * `data`: the request data as a vector of bytes
+* `uri`: additional details, normally not used
 """
 mutable struct Request
     method::String      # HTTP method string (e.g. "GET")
