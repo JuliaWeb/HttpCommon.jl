@@ -1,7 +1,7 @@
 __precompile__()
-
+ 
 module HttpCommon
-
+using Compat.Dates
 using URIParser: URI, unescape
 
 export Headers, Request, Cookie, Response, escapeHTML, parsequerystring
@@ -15,13 +15,12 @@ include("status.jl")
 """
 `Headers` represents the header fields for an HTTP request.
 """
-const Headers = Dict{AbstractString, AbstractString}
+const Headers = Dict{String, String}
 headers() = Headers(
     "Server"            => "Julia/$VERSION",
     "Content-Type"      => "text/html; charset=utf-8",
     "Content-Language"  => "en",
     "Date"              => Dates.format(now(Dates.UTC), Dates.RFC1123Format) )
-
 
 """
 A `Request` represents an HTTP request sent by a client to a server.
@@ -31,8 +30,9 @@ It has five fields:
 * `resource`: the resource requested (e.g. "/hello/world")
 * `headers`: see `Headers` above
 * `data`: the request data as a vector of bytes
+* `uri`: additional details, normally not used
 """
-type Request
+mutable struct Request
     method::String      # HTTP method string (e.g. "GET")
     resource::String    # Resource requested (e.g. "/hello/world")
     headers::Headers
@@ -40,7 +40,8 @@ type Request
     uri::URI
 end
 Request() = Request("", "", Headers(), UInt8[], URI(""))
-Request(method, resource, headers, data) = Request(method, resource, headers, data, URI(""))
+Request(method, resource, headers, data) = 
+          Request(String(method), String(resource), Headers(headers), Vector{UInt8}(data), URI(""))
 
 Base.show(io::IO, r::Request) = print(io, "Request(", r.uri, ", ",
                                         length(r.headers), " headers, ",
@@ -52,12 +53,12 @@ A `Cookie` represents an HTTP cookie. It has three fields:
 `name` and `value` are strings, and `attrs` is dictionary
 of pairs of strings.
 """
-type Cookie
+mutable struct Cookie
     name::String
     value::String
     attrs::Dict{String, String}
 end
-Cookie(name, value) = Cookie(name, value, Dict{String, String}())
+Cookie(name, value) = Cookie(String(name), String(value), Dict{String, String}())
 Base.show(io::IO, c::Cookie) = print(io, "Cookie(", c.name, ", ", c.value,
                                         ", ", length(c.attrs), " attributes)")
 
@@ -77,7 +78,7 @@ It has six fields:
 
 Response has many constructors - use `methods(Response)` for full list.
 """
-type Response
+mutable struct Response
     status::Int
     headers::Headers
     cookies::Dict{String, Cookie}
@@ -91,15 +92,20 @@ type Response
 end
 # If a Response is instantiated with all of fields except for `finished`,
 # `finished` will default to `false`.
-const HttpData = Union{Vector{UInt8}, AbstractString}
+const HttpData = Union{Vector{UInt8}, String}
 Response(s::Int, h::Headers, d::HttpData) =
-  Response(s, h, Dict{String, Cookie}(), d, Nullable(), Response[], false, Request[])
+  Response(s, h, Dict{String, Cookie}(), Vector{UInt8}(d), Nullable(), Response[], false, Request[])
+Response(s::Int, h::Dict{AbstractString,AbstractString}, d::HttpData) =
+  Response(s, Headers(h), Dict{String, Cookie}(), Vector{UInt8}(d), Nullable(), Response[], false, Request[])
 Response(s::Int, h::Headers)              = Response(s, h, UInt8[])
-Response(s::Int, d::HttpData)             = Response(s, headers(), d)
-Response(d::HttpData, h::Headers)         = Response(200, h, d)
-Response(d::HttpData)                     = Response(d, headers())
+Response(s::Int, h::Dict{AbstractString,AbstractString}) = Response(s, Headers(h), UInt8[])
+Response(s::Int, d::HttpData)             = Response(s, headers(), Vector{UInt8}(d))
+Response(d::HttpData, h::Headers)         = Response(200, h, Vector{UInt8}(d))
+Response(d::HttpData, h::Dict{AbstractString,AbstractString})         = Response(200, Headers(h), Vector{UInt8}(d))
+Response(d::HttpData)                     = Response(Vector{UInt8}(d), headers())
 Response(s::Int)                          = Response(s, headers(), UInt8[])
 Response()                                = Response(200)
+
 
 function Base.show(io::IO, r::Response)
     print(io, "Response(", r.status, " ", get(STATUS_CODES, r.status, "Unknown Code"), ", ",
@@ -109,23 +115,23 @@ end
 
 
 """
-escapeHTML(i::AbstractString)
+escapeHTML(i::String)
 
 Returns a string with special HTML characters escaped: &, <, >, ", '
 """
-function escapeHTML(i::AbstractString)
+function escapeHTML(i::String)
     # Refer to http://stackoverflow.com/a/7382028/3822752 for spec. links
     o = replace(i, "&", "&amp;")
     o = replace(o, "\"", "&quot;")
     o = replace(o, "'", "&#39;")
     o = replace(o, "<", "&lt;")
     o = replace(o, ">", "&gt;")
-    return o
+    return o 
 end
 
 
 """
-parsequerystring(query::AbstractString)
+parsequerystring(query::String)
 
 Convert a valid querystring to a Dict:
 
@@ -135,8 +141,8 @@ Convert a valid querystring to a Dict:
     #   "baz" => "<a href='http://www.hackershool.com'>hello world!</a>"
     #   "foo" => "bar"
 """
-function parsequerystring{T<:AbstractString}(query::T)
-    q = Dict{AbstractString,AbstractString}()
+function parsequerystring(query::T) where T<:AbstractString
+    q = Dict{String,String}()
     length(query) == 0 && return q
     for field in split(query, "&")
         keyval = split(field, "=")
