@@ -3,6 +3,7 @@ __precompile__()
 module HttpCommon
 using Compat.Dates
 using URIParser: URI, unescape
+using Nullables
 
 export Headers, Request, Cookie, Response, escapeHTML, parsequerystring
 
