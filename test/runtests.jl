@@ -1,6 +1,6 @@
 using HttpCommon
 using Compat
-using Compat.Test
+using Test
 
 # headers
 h = HttpCommon.headers()

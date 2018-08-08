@@ -1,4 +1,3 @@
-__precompile__()
 module HttpCommon
 using Dates
 using URIParser: URI, unescape
