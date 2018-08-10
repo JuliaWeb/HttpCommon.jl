@@ -1,3 +1,4 @@
+__precompile__()
 module HttpCommon
 using Compat.Dates
 using URIParser: URI, unescape
