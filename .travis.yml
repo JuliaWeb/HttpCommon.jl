@@ -4,13 +4,14 @@ os:
     - osx
 julia:
     - 0.6
+    - 1.0
     - nightly
 notifications:
     email: false
 sudo: false
 script:
     - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-    - julia -e 'Pkg.clone(pwd())'
-    - julia -e 'Pkg.test("HttpCommon", coverage=true)'
+    - julia -e 'using Pkg; Pkg.clone(pwd())'
+    - julia -e 'using Pkg; Pkg.test("HttpCommon", coverage=true)'
 after_success:
-    - julia -e 'cd(Pkg.dir("HttpCommon")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+    - julia -e 'using Pkg; cd(Pkg.dir("HttpCommon")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
