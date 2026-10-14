@@ -1,5 +1,4 @@
 using HttpCommon
-using Compat
 using Test
 
 # headers
