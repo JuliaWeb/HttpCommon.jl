@@ -8,7 +8,7 @@ Nullables = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
 URIParser = "30578b45-9adc-5946-b283-645ec420af67"
 
 [compat]
-Nullables = "0, 1"
+Nullables = "0.0.7, 0.0.8, 1"
 URIParser = "0.0.0 - 0.4"
 julia = "0.7, 1"
 
